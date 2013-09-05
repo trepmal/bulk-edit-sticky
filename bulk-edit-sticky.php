@@ -29,18 +29,13 @@ class Bulk_Edit_Sticky {
 
 		$post_ids = $_POST['ids'];
 		$stickies = get_option( 'sticky_posts' );
-		// $added = array();
-		// $removed = array();
+
 		if ( 'sticky-replace' == $_POST['method'] ) {
 			update_option( 'sticky_posts', $post_ids );
-			// $removed = array_diff( $stickies, $post_ids );
-			// $added = $post_ids;
 		} else if ( 'sticky-append' == $_POST['method'] ) {
 			update_option( 'sticky_posts', array_merge( $stickies, $post_ids ) );
-			// $added = $post_ids;
 		} else if ( 'sticky-remove' == $_POST['method'] ) {
 			update_option( 'sticky_posts', array_diff( $stickies, $post_ids ) );
-			// $removed = $post_ids;
 		}
 
 		$_changed_posts = array_merge( $post_ids, $stickies );
@@ -52,30 +47,30 @@ class Bulk_Edit_Sticky {
 			$changed_posts[ $cp ] = $post_states;
 		}
 
-		$total = count( $changed_posts );
-
-		// send back added and removed ids separately
-		print_r( json_encode( compact( 'changed_posts' ) ) );
-		// print_r( json_encode( compact( 'added', 'removed', 'changed_posts', 'total' ) ) );
-		die();
+		wp_send_json( compact( 'changed_posts' ) );
 	}
 
 	function admin_print_footer_scripts() {
-		$screen = get_current_screen();
-		if ( $screen->id != 'edit-post' ) return;
+
+		if ( get_current_screen()->id != 'edit-post' ) return;
+
 		?><script>
 jQuery(document).ready( function($) {
 	// for simplicity, the bulk-sticky option is only in the upper <select> menu
 	// var $bulk_selects = $('select[name="action"],select[name="action2"]');
 	// var $bulk_buttons = $('#doaction,#doaction2');
-	var $bulk_selects = $('select[name="action"]');
-	var $bulk_buttons = $('#doaction');
+	var $bulk_selects = $('select[name="action"]'),
+		$bulk_buttons = $('#doaction'),
+		make_sticky = '<?php _e( 'Make Sticky', 'bulk-edit-sticky' ); ?>',
+		replace_stickies = '<?php _e( 'Replace current stickies', 'bulk-edit-sticky' ); ?>',
+		append_stickies = '<?php _e( 'Add to stickies', 'bulk-edit-sticky' ); ?>',
+		remove_stickies = '<?php _e( 'Remove from stickies', 'bulk-edit-sticky' ); ?>';
 
-	$bulk_selects.append( '<option value="sticky" class="hide-if-no-js">Make Sticky</option>');
+	$bulk_selects.append( '<option value="sticky" class="hide-if-no-js">'+ make_sticky +'</option>');
 	$bulk_buttons.after( '<span class="sticky-buttons hidden">'+
-		'<input type="submit" class="button" name="sticky-replace" value="Replace current stickies" />'+
-		'<input type="submit" class="button" name="sticky-append" value="Add to stickies" />'+
-		'<input type="submit" class="button" name="sticky-remove" value="Remove from stickies" />'+
+		'<input type="submit" class="button" name="sticky-replace" value="'+ replace_stickies +'" />'+
+		'<input type="submit" class="button" name="sticky-append" value="'+ append_stickies +'" />'+
+		'<input type="submit" class="button" name="sticky-remove" value="'+ remove_stickies +'" />'+
 		'</span>');
 	$bulk_selects.change( function() {
 		if ( $(this).val() == 'sticky' ) {
@@ -104,6 +99,7 @@ jQuery(document).ready( function($) {
 			for( var ind in response.changed_posts ) {
 				post_title = $('#post-'+ ind ).find( '.row-title');
 				post_title.siblings( '.post-state').remove();
+				// there's got to be a better way
 				if ( post_title.get(0) && post_title.get(0).nextSibling && post_title.get(0).nextSibling.nodeValue == " - " )
 					post_title.get(0).nextSibling.remove(); //removing hanging hyphen
 				post_title.after( response.changed_posts[ind] );
