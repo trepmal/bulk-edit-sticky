@@ -19,8 +19,8 @@ class Bulk_Edit_Sticky {
 
 	function __construct() {
 		if ( !is_admin() ) return;
-		add_action( 'wp_ajax_bulk_sticky', array( &$this, 'bulk_sticky_cb' ) );
-		add_action( 'admin_print_footer_scripts', array( &$this, 'admin_print_footer_scripts' ) );
+		add_action( 'wp_ajax_bulk_sticky',        array( $this, 'bulk_sticky_cb' ) );
+		add_action( 'admin_print_footer_scripts', array( $this, 'admin_print_footer_scripts' ) );
 	}
 
 	function bulk_sticky_cb() {
@@ -52,19 +52,20 @@ class Bulk_Edit_Sticky {
 
 	function admin_print_footer_scripts() {
 
-		if ( get_current_screen()->id != 'edit-post' ) return;
-
+		if ( get_current_screen()->id != 'edit-post' ) {
+			return;
+		}
 		?><script>
 jQuery(document).ready( function($) {
 	// for simplicity, the bulk-sticky option is only in the upper <select> menu
 	// var $bulk_selects = $('select[name="action"],select[name="action2"]');
 	// var $bulk_buttons = $('#doaction,#doaction2');
-	var $bulk_selects = $('select[name="action"]'),
-		$bulk_buttons = $('#doaction'),
-		make_sticky = '<?php _e( 'Make Sticky', 'bulk-edit-sticky' ); ?>',
-		replace_stickies = '<?php _e( 'Replace current stickies', 'bulk-edit-sticky' ); ?>',
-		append_stickies = '<?php _e( 'Add to stickies', 'bulk-edit-sticky' ); ?>',
-		remove_stickies = '<?php _e( 'Remove from stickies', 'bulk-edit-sticky' ); ?>';
+	var $bulk_selects    = $('select[name="action"]'),
+	    $bulk_buttons    = $('#doaction'),
+	    make_sticky      = '<?php _e( 'Make Sticky', 'bulk-edit-sticky' ); ?>',
+	    replace_stickies = '<?php _e( 'Replace current stickies', 'bulk-edit-sticky' ); ?>',
+	    append_stickies  = '<?php _e( 'Add to stickies', 'bulk-edit-sticky' ); ?>',
+	    remove_stickies  = '<?php _e( 'Remove from stickies', 'bulk-edit-sticky' ); ?>';
 
 	$bulk_selects.append( '<option value="sticky" class="hide-if-no-js">'+ make_sticky +'</option>');
 	$bulk_buttons.after( '<span class="sticky-buttons hidden">'+
@@ -81,7 +82,7 @@ jQuery(document).ready( function($) {
 			$('.sticky-buttons').addClass('hidden');
 		}
 	});
-	$('.sticky-buttons input').click( function(ev) {
+	$('.sticky-buttons input').on( 'click', function(ev) {
 		ev.preventDefault();
 		// get checked posts
 		var checked = new Array();
